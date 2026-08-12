@@ -48,6 +48,8 @@ from threading import Lock
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
+from elevenlabs.client import ElevenLabs
+from elevenlabs.errors import BadRequestError
 
 load_dotenv()
 
@@ -59,6 +61,8 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 DB_FILE = DATA_DIR / "agent.db"
 LEADS_FILE = DATA_DIR / "leads.jsonl"
 POSTCALL_FILE = DATA_DIR / "post_call_log.jsonl"
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
+POSTCALL_WEBHOOK_SECRET = os.getenv("POSTCALL_WEBHOOK_SECRET", "")
 
 app = FastAPI(title="Bilingual Voice Agent — Tool Server", version="0.1.0")
 
@@ -78,6 +82,10 @@ DEMO_SLOTS = {
     "site-visit": ["Monday 09:30", "Thursday 13:00"],
     "follow-up": ["Sunday 12:00", "Tuesday 17:00", "Thursday 10:30"],
 }
+
+elevenlabs = ElevenLabs(
+    api_key=ELEVENLABS_API_KEY,
+)
 
 BOOKING_LOCK = Lock()
 
@@ -161,6 +169,27 @@ def init_db() -> None:
             )
             """
         )
+
+        conn.execute(
+    """
+    CREATE TABLE IF NOT EXISTS post_calls (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        conversation_id TEXT NOT NULL UNIQUE,
+        agent_id TEXT,
+        agent_name TEXT,
+        event_timestamp INTEGER,
+        status TEXT,
+        call_duration_secs INTEGER,
+        termination_reason TEXT,
+        call_successful TEXT,
+        transcript_summary TEXT,
+        transcript_json TEXT NOT NULL,
+        analysis_json TEXT,
+        metadata_json TEXT,
+        received_at TEXT NOT NULL
+        )
+    """
+    )
 
 def send_handoff_email(
     ref: str,
@@ -484,24 +513,116 @@ def request_handoff(
 
 @app.post("/webhooks/post-call")
 async def post_call(request: Request) -> dict:
-    """
-    Receives the ElevenLabs post-call payload (transcript + analysis) after a
-    conversation ends. Enable it in the ElevenLabs settings under post-call
-    webhooks and point it at this endpoint.
+    if not POSTCALL_WEBHOOK_SECRET:
+        log.error("POSTCALL_WEBHOOK_SECRET is not configured.")
+        raise HTTPException(
+            status_code=503,
+            detail="Post-call webhook is not configured.",
+        )
 
-    NOTE: ElevenLabs signs post-call webhooks with a shared secret. Before
-    production use, verify the signature header against
-    POSTCALL_WEBHOOK_SECRET per the current docs — the exact header/scheme is
-    documented on the post-call webhooks page.
-    """
-    payload = await request.json()
-    # Store a compact record; full payloads are large.
-    save_record(
-        POSTCALL_FILE,
-        {
-            "conversation_id": payload.get("conversation_id") or payload.get("data", {}).get("conversation_id"),
-            "received_keys": sorted(payload.keys()),
-        },
+    raw_body = await request.body()
+    signature = request.headers.get("elevenlabs-signature")
+
+    if not signature:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing ElevenLabs-Signature header.",
+        )
+
+    try:
+        event = elevenlabs.webhooks.construct_event(
+            rawBody=raw_body.decode("utf-8"),
+            sig_header=signature,
+            secret=POSTCALL_WEBHOOK_SECRET,
+        )
+    except BadRequestError:
+        log.warning("Rejected post-call webhook with invalid signature.")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid webhook signature.",
+        )
+
+    event_type = event.get("type")
+
+    # For now, we only persist transcription/analysis events.
+    if event_type != "post_call_transcription":
+        return {
+            "received": True,
+            "ignored": True,
+            "type": event_type,
+        }
+
+    data = event.get("data", {})
+    metadata = data.get("metadata") or {}
+    analysis = data.get("analysis") or {}
+    transcript = data.get("transcript") or []
+
+    conversation_id = data.get("conversation_id")
+
+    if not conversation_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing conversation_id.",
+        )
+
+    received_at = datetime.now(timezone.utc).isoformat()
+
+    with get_db() as conn:
+        conn.execute(
+            """
+            INSERT INTO post_calls (
+                conversation_id,
+                agent_id,
+                agent_name,
+                event_timestamp,
+                status,
+                call_duration_secs,
+                termination_reason,
+                call_successful,
+                transcript_summary,
+                transcript_json,
+                analysis_json,
+                metadata_json,
+                received_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(conversation_id) DO UPDATE SET
+                agent_id = excluded.agent_id,
+                agent_name = excluded.agent_name,
+                event_timestamp = excluded.event_timestamp,
+                status = excluded.status,
+                call_duration_secs = excluded.call_duration_secs,
+                termination_reason = excluded.termination_reason,
+                call_successful = excluded.call_successful,
+                transcript_summary = excluded.transcript_summary,
+                transcript_json = excluded.transcript_json,
+                analysis_json = excluded.analysis_json,
+                metadata_json = excluded.metadata_json,
+                received_at = excluded.received_at
+            """,
+            (
+                conversation_id,
+                data.get("agent_id"),
+                data.get("agent_name"),
+                event.get("event_timestamp"),
+                data.get("status"),
+                metadata.get("call_duration_secs"),
+                metadata.get("termination_reason"),
+                analysis.get("call_successful"),
+                analysis.get("transcript_summary"),
+                json.dumps(transcript, ensure_ascii=False),
+                json.dumps(analysis, ensure_ascii=False),
+                json.dumps(metadata, ensure_ascii=False),
+                received_at,
+            ),
+        )
+
+    log.info(
+        "post-call transcription stored: %s",
+        conversation_id,
     )
-    log.info("post-call payload received")
-    return {"received": True}
+
+    return {
+        "received": True,
+        "conversation_id": conversation_id,
+    }

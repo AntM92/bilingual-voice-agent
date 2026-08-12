@@ -3,3 +3,4 @@ uvicorn[standard]>=0.29
 pydantic>=2.6
 python-dotenv>=1.0
 requests>=2.32
+elevenlabs>=2
