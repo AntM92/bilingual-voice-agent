@@ -200,6 +200,17 @@ def send_handoff_email(
         ),
     }
 
+    # PythonAnywhere free accounts require outbound HTTPS traffic
+    # to use their proxy. Locally this can remain unset.
+    proxy_url = os.getenv("OUTBOUND_PROXY", "")
+
+    proxies = None
+    if proxy_url:
+        proxies = {
+            "http": proxy_url,
+            "https": proxy_url,
+        }
+
     try:
         response = requests.post(
             "https://api.brevo.com/v3/smtp/email",
@@ -209,6 +220,7 @@ def send_handoff_email(
                 "content-type": "application/json",
             },
             json=payload,
+            proxies=proxies,
             timeout=10,
         )
 
