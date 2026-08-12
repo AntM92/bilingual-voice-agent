@@ -1,0 +1,19 @@
+{
+  "_comment": "REFERENCE ONLY — illustrative shape of an API-created agent with the pieces this prototype uses. The dashboard is the source of truth for this project; if you later automate agent creation, align field names with the current API schema (docs: append .md to any docs URL for machine-readable pages).",
+  "name": "Zafira Demo Concierge",
+  "conversation_config": {
+    "agent": {
+      "language": "en",
+      "additional_languages": ["ar"],
+      "first_message": "Hi, welcome to Zafira's demo concierge...",
+      "prompt": {
+        "prompt": "<contents of agent/system_prompt.md>",
+        "built_in_tools": {
+          "language_detection": {},
+          "end_call": {}
+        }
+      }
+    }
+  },
+  "_webhook_tools": "The three webhook tools (check_availability, book_appointment, request_handoff) are configured per agent/tools.md."
+}
