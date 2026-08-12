@@ -757,6 +757,41 @@ def analytics_summary() -> dict:
         "booking_conversion_rate_percent": conversion_rate,
     }
 
+@app.get(
+    "/analytics/recent",
+    dependencies=[Depends(require_workspace_auth)],
+)
+def analytics_recent(limit: int = 10) -> dict:
+    # Keep the endpoint lightweight even if a large limit is requested.
+    limit = max(1, min(limit, 50))
+
+    with get_db() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                conversation_id,
+                agent_name,
+                language,
+                outcome,
+                booking_reference,
+                handoff_reference,
+                call_duration_secs,
+                call_successful,
+                termination_reason,
+                transcript_summary,
+                received_at
+            FROM post_calls
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+    return {
+        "count": len(rows),
+        "calls": [dict(row) for row in rows],
+    }
+
 @app.post("/webhooks/post-call")
 async def post_call(request: Request) -> dict:
     if not POSTCALL_WEBHOOK_SECRET:
