@@ -30,8 +30,7 @@ Design notes
 
 Run locally:
     uvicorn server.main:app --reload --port 8000
-Expose to ElevenLabs while testing:
-    ngrok http 8000
+In production the server runs on an always-on HTTPS host (the demo uses PythonAnywhere); for local testing, expose the dev server with any HTTPS tunnel.
 """
 
 import json
