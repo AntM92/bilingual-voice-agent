@@ -1,8 +1,7 @@
 # Webhook tool configuration (dashboard)
 
 Create these three tools in the dashboard under Agent → Tools → Add tool →
-**Webhook**. Replace `https://YOUR-NGROK-URL` with your ngrok URL while
-testing (or your deployed server URL later).
+**Webhook**. Replace https://YOUR-SERVER-URL with your hosted backend's base URL (the live demo uses PythonAnywhere); for local testing, any HTTPS tunnel URL works the same way.
 
 For **every** tool, add a header under Secrets:
 `X-Workspace-Token: <the same value as WORKSPACE_TOKEN in your .env>`.
@@ -21,7 +20,7 @@ data.
 - **Description:** "Fetch open appointment slots for a service. Call this
   before offering any times to the caller. Never invent availability."
 - **Method:** POST
-- **URL:** `https://YOUR-NGROK-URL/tools/check-availability`
+- **URL:** `https://YOUR-SERVER-URL/tools/check-availability`
 - **Body parameters:**
   - `service` (string, required) — "The service the caller wants: one of
     'consultation', 'site-visit', 'follow-up'."
@@ -34,7 +33,7 @@ data.
   chosen a slot returned by check_availability and has confirmed their name
   and phone number."
 - **Method:** POST
-- **URL:** `https://YOUR-NGROK-URL/tools/book-appointment`
+- **URL:** `https://YOUR-SERVER-URL/tools/book-appointment`
 - **Body parameters:**
   - `name` (string, required) — "Caller's name, as confirmed back to them."
   - `phone` (string, required) — "Caller's phone number, confirmed digit by
@@ -53,7 +52,7 @@ data.
   caller asks for a person, sounds frustrated, or asks something outside
   your scope. Collect a callback number first."
 - **Method:** POST
-- **URL:** `https://YOUR-NGROK-URL/tools/request-handoff`
+- **URL:** `https://YOUR-SERVER-URL/tools/request-handoff`
 - **Body parameters:**
   - `name` (string, optional) — "Caller's name if given."
   - `phone` (string, required) — "Callback number, confirmed digit by
