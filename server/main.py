@@ -38,6 +38,7 @@ import json
 import logging
 import os
 import uuid
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -54,6 +55,7 @@ log = logging.getLogger("voice-agent")
 
 WORKSPACE_TOKEN = os.getenv("WORKSPACE_TOKEN", "")
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DB_FILE = DATA_DIR / "agent.db"
 LEADS_FILE = DATA_DIR / "leads.jsonl"
 POSTCALL_FILE = DATA_DIR / "post_call_log.jsonl"
 
@@ -104,31 +106,60 @@ def new_ref(prefix: str) -> str:
 
 def get_booked_slots(service: str) -> set[str]:
     """Return already-booked slots for a service."""
-    if not LEADS_FILE.exists():
-        return set()
+    with get_db() as conn:
+        rows = conn.execute(
+            """
+            SELECT slot
+            FROM bookings
+            WHERE service = ?
+            """,
+            (service,),
+        ).fetchall()
 
-    booked: set[str] = set()
+    return {row["slot"] for row in rows}
 
-    with LEADS_FILE.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
+def get_db() -> sqlite3.Connection:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-            if not line:
-                continue
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
 
-            try:
-                record = json.loads(line)
-            except json.JSONDecodeError:
-                continue
+    return conn
 
-            if (
-                record.get("type") == "booking"
-                and record.get("service") == service
-                and record.get("slot")
-            ):
-                booked.add(record["slot"])
 
-    return booked
+def init_db() -> None:
+    with get_db() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS bookings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ref TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL,
+                phone TEXT NOT NULL,
+                service TEXT NOT NULL,
+                slot TEXT NOT NULL,
+                language TEXT NOT NULL,
+                notes TEXT,
+                saved_at TEXT NOT NULL,
+                UNIQUE(service, slot)
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS handoffs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ref TEXT NOT NULL UNIQUE,
+                name TEXT,
+                phone TEXT NOT NULL,
+                reason TEXT NOT NULL,
+                preferred_time TEXT,
+                language TEXT NOT NULL,
+                saved_at TEXT NOT NULL
+            )
+            """
+        )
 # ---------------------------------------------------------------------------
 # Request models — field descriptions double as documentation for what the
 # agent should have collected before calling the tool.
@@ -162,6 +193,9 @@ class HandoffRequest(BaseModel):
 def health() -> dict:
     return {"status": "ok", "auth_enabled": bool(WORKSPACE_TOKEN)}
 
+@app.on_event("startup")
+def startup() -> None:
+    init_db()
 
 @app.post("/tools/check-availability")
 def check_availability(
@@ -239,9 +273,38 @@ def book_appointment(
 
     # Prevent two bookings from claiming the same slot.
     with BOOKING_LOCK:
-        booked_slots = get_booked_slots(service)
+        ref = new_ref("BK")
+        saved_at = datetime.now(timezone.utc).isoformat()
 
-        if slot in booked_slots:
+        try:
+            with get_db() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO bookings (
+                        ref,
+                        name,
+                        phone,
+                        service,
+                        slot,
+                        language,
+                        notes,
+                        saved_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        ref,
+                        body.name,
+                        body.phone,
+                        service,
+                        slot,
+                        body.language,
+                        body.notes,
+                        saved_at,
+                    ),
+                )
+
+        except sqlite3.IntegrityError:
             raise HTTPException(
                 status_code=409,
                 detail={
@@ -252,21 +315,6 @@ def book_appointment(
                     ),
                 },
             )
-
-        ref = new_ref("BK")
-
-        record = body.model_dump()
-        record["service"] = service
-        record["slot"] = slot
-
-        save_record(
-            LEADS_FILE,
-            {
-                "type": "booking",
-                "ref": ref,
-                **record,
-            },
-        )
 
     log.info("booking saved: %s (%s, %s)", ref, service, slot)
 
@@ -283,11 +331,39 @@ def request_handoff(
     x_workspace_token: Optional[str] = Header(default=None),
 ) -> dict:
     require_token(x_workspace_token)
+
     ref = new_ref("HND")
-    save_record(LEADS_FILE, {"type": "handoff", "ref": ref, **body.model_dump()})
+    saved_at = datetime.now(timezone.utc).isoformat()
+
+    with get_db() as conn:
+        conn.execute(
+            """
+            INSERT INTO handoffs (
+                ref,
+                name,
+                phone,
+                reason,
+                preferred_time,
+                language,
+                saved_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                ref,
+                body.name,
+                body.phone,
+                body.reason,
+                body.preferred_time,
+                body.language,
+                saved_at,
+            ),
+        )
+
     # TODO(production): notify a human immediately — WhatsApp Business API,
     # Slack webhook, or email — instead of only persisting the request.
     log.info("handoff requested: %s (%s)", ref, body.reason)
+
     return {
         "confirmed": True,
         "reference": ref,
