@@ -1,374 +1,305 @@
-# ZAFIRA AI — COMPANY KNOWLEDGE BASE
+# Zafira AI — Company Knowledge Base
 
-## Company Overview
+> This file is a sanitized, version-controlled copy of the company knowledge
+> used by the live ElevenLabs agent. Keep it aligned with the knowledge-base
+> document configured in ElevenLabs whenever company information changes.
 
-Zafira AI is an AI automation and AI infrastructure company based in the United Arab Emirates and focused on companies across the Gulf region.
+## Company overview
+
+Zafira AI is a UAE-based AI automation and AI infrastructure company serving
+businesses across the Gulf region.
 
 Legal entity: Zafira AI FZ-LLC.
 
-Zafira AI builds AI-powered operational systems for ambitious businesses that want to automate workflows, connect existing systems, improve customer interactions, and reduce repetitive operational work.
+Zafira AI builds AI-powered operational systems that help businesses automate
+workflows, connect existing systems, improve customer interactions, and reduce
+repetitive operational work.
 
-The company's focus is not simply adding another software dashboard. The goal is to build integrated systems that perform real operational work automatically.
+The company primarily serves businesses in the UAE, Saudi Arabia, and the
+wider Gulf region.
 
-Zafira AI primarily serves businesses in the UAE, Saudi Arabia, and the wider Gulf region.
+## Core services
 
+Zafira AI has four core service areas.
 
-## Core Services
+### Workflow Automation
 
-Zafira AI has four main service areas.
+Zafira AI designs automated workflows that replace repetitive manual work
+involving spreadsheets, inboxes, copy-and-paste tasks, and disconnected
+operational processes.
 
+Typical use cases include:
 
-### 1. Workflow Automation
-
-Zafira AI designs automated workflows that replace repetitive manual processes involving spreadsheets, inboxes, copy-and-paste work, and disconnected operational tasks.
-
-Typical applications can include:
-
-- Lead handling
-- Customer intake
-- Email workflows
-- Internal approvals
-- Data processing
-- Notifications
-- Document workflows
-- Operational handoffs
+- lead handling
+- customer intake
+- email workflows
+- internal approvals
+- data processing
+- notifications
+- document workflows
+- operational handoffs
 - CRM workflows
-- Back-office processes
+- back-office processes
 
-The goal is to create reliable systems that can execute routine operational work automatically.
+### Intelligent AI Systems
 
-
-### 2. Intelligent AI Systems
-
-Zafira AI builds production-grade AI agents and intelligent systems designed for business-specific workflows.
+Zafira AI builds business-specific AI agents and intelligent systems.
 
 These systems can include:
 
 - AI agents
-- Business-specific knowledge
-- Memory
-- Decision logic
-- Guardrails
-- Workflow execution
-- Human escalation
-- Custom business rules
+- company knowledge
+- memory
+- decision logic
+- guardrails
+- workflow execution
+- human escalation
+- custom business rules
 
-These systems are designed for tasks that generic off-the-shelf software may not adequately handle.
+### Systems Integration
 
+Zafira AI connects existing business systems so information can move
+automatically between them.
 
-### 3. Systems Integration
-
-Zafira AI connects existing business systems so information can move automatically between them.
-
-Examples of systems and integrations include:
+Examples include:
 
 - CRM platforms
 - ERP systems
-- Accounting or ledger systems
+- accounting systems
 - WhatsApp Business
-- Email
-- Calendars
-- Booking systems
-- Databases
-- Custom APIs
-- Internal business applications
+- email
+- calendars
+- booking systems
+- databases
+- custom APIs
+- internal applications
 
-The objective is to remove disconnected systems and manual data transfer between tools.
-
-
-### 4. Conversational AI
+### Conversational AI
 
 Zafira AI builds conversational AI systems for voice and chat.
 
-These can include bilingual English and Arabic assistants capable of:
+Capabilities can include:
 
-- Answering customer questions
-- Handling inbound enquiries
-- Qualifying leads
-- Capturing customer details
-- Checking appointment availability
-- Booking appointments
-- Following business-specific knowledge
-- Escalating to a human when required
-- Connecting conversations to CRM and operational systems
+- answering customer questions
+- handling inbound enquiries
+- qualifying leads
+- capturing customer details
+- checking appointment availability
+- booking appointments
+- following business-specific knowledge
+- escalating to a human when required
+- connecting conversations to CRM and operational systems
+- bilingual English and Arabic customer experiences
 
-Zafira AI places particular emphasis on natural English and Arabic customer experiences for businesses operating in the Gulf.
+## Typical business use cases
 
+Zafira AI can help with problems such as:
 
-## Typical Business Use Cases
-
-Examples of problems Zafira AI can help solve include:
-
-- Repetitive administrative work
-- Manual lead qualification
-- Slow response to inbound enquiries
-- Appointment scheduling
-- Customer-service automation
+- repetitive administrative work
+- manual lead qualification
+- slow inbound response
+- appointment scheduling
+- customer-service automation
 - WhatsApp enquiry handling
-- Voice-agent customer service
+- voice-agent customer service
 - CRM automation
-- Data movement between systems
-- Manual operational handoffs
-- Workflow bottlenecks
-- Business processes that currently rely heavily on spreadsheets and email
-- Processes requiring AI-assisted judgment combined with deterministic workflow automation
+- manual data movement between systems
+- workflow bottlenecks
+- processes that rely heavily on spreadsheets and email
+- workflows that combine AI-assisted judgment with deterministic automation
 
-
-## How Zafira AI Works With Clients
+## How Zafira AI works with clients
 
 Zafira AI follows a four-phase process.
 
+### 1. Discover
 
-### Phase 1 — Discover
+Map the current operational process, identify bottlenecks, and define the
+business problem and target outcome.
 
-Zafira AI maps the client's current operational process, identifies bottlenecks, and defines the problem and desired business outcome.
+### 2. Architect
 
-The discovery phase is designed to understand the real operational chain before development begins.
+Design the system architecture, including:
 
+- data flows
+- integrations
+- business rules
+- technical trade-offs
+- implementation phases
 
-### Phase 2 — Architect
+### 3. Build
 
-Zafira AI designs the system architecture.
+Implement the solution iteratively using real workflows and real operating
+requirements.
 
-This may include:
+### 4. Operate
 
-- System diagrams
-- Data flows
-- Integration requirements
-- Business rules
-- Technical trade-offs
-- A phased implementation plan
+Support and improve the deployed system through monitoring, observability,
+maintenance, and workflow optimization.
 
+## Engagement options and pricing
 
-### Phase 3 — Build
+Prices below are in UAE dirhams (AED) and should be kept synchronized with
+Zafira AI's published pricing.
 
-The solution is implemented iteratively.
+Applicable UAE VAT is added on invoice where required.
 
-Zafira AI focuses on production-oriented systems and demonstrates progress using real workflows and data rather than only isolated demonstrations.
+### Pilot
 
-
-### Phase 4 — Operate
-
-After deployment, Zafira AI can continue operating and improving the system with the client.
-
-This may include:
-
-- Monitoring
-- Observability
-- Operational support
-- Improvements
-- System maintenance
-- Workflow optimization
-
-
-# Engagement Options and Pricing
-
-The following pricing reflects the currently published Zafira AI engagement tiers.
-
-Prices are in UAE dirhams (AED).
-
-Prices shown below are exclusive of applicable UAE VAT, which is added on invoice.
-
-
-## Pilot
-
-AED 15,000 setup
-+
+AED 15,000 setup  
 AED 5,000 per month
 
 Designed around one production-ready workflow.
 
 Includes:
 
-- One automation scoped and deployed to production
+- one automation scoped and deployed to production
 - WhatsApp, Email, or CRM integration
-- One bilingual prompt system
+- one bilingual prompt system
 - 30-day support window
 
-A Pilot is intended as a focused starting engagement that proves one operational workflow.
+### Standard
 
-
-## Standard
-
-AED 25,000 setup
-+
+AED 25,000 setup  
 AED 10,000 per month
 
-Designed for approximately 3 to 5 linked workflows.
+Designed for approximately 3–5 linked workflows.
 
 Includes:
 
 - 3–5 linked workflows
-- Custom AI agent with memory
-- Full systems integration layer
-- Bilingual English/Arabic conversational layer
-- Quarterly operating review
+- custom AI agent with memory
+- systems integration layer
+- bilingual English/Arabic conversational layer
+- quarterly operating review
 
-This is the main engagement tier for businesses requiring multiple connected automation workflows.
+### Enterprise
 
-
-## Enterprise
-
-AED 50,000 setup
-+
+AED 50,000 setup  
 AED 50,000 per month
 
-Designed for organizations requiring continuous development and more extensive infrastructure.
+Designed for organizations requiring continuous development and broader
+infrastructure.
 
 Includes:
 
-- Dedicated build pod
-- Bespoke architecture and infrastructure
+- dedicated build pod
+- bespoke architecture and infrastructure
 - SLAs
-- Observability
-- On-call support
-- Compliance and data-residency considerations
-- Founder access
+- observability
+- on-call support
+- compliance and data-residency considerations
+- founder access
 
+### Pricing rules for the agent
 
-## Pricing Guidance
+- Do not invent custom prices.
+- Do not invent discounts.
+- Do not guarantee that a project fits a particular package.
+- Do not promise implementation timelines unless explicitly documented.
+- For project-specific pricing, offer a consultation.
 
-Pricing depends on the scope and complexity of the business problem.
+## Selected work
 
-If a prospective customer is unsure which engagement is appropriate, encourage them to book a consultation so Zafira AI can understand their operational requirements.
+The Zafira AI website highlights selected confidential client work.
 
-Do not invent custom prices or discounts.
+### Logistics — UAE
 
-Do not promise that a specific project will fit into a particular package without first understanding the project requirements.
+A regional freight-forwarding operation had staff manually handling shipment
+intake, customs preparation, and ledger reconciliation.
 
+Zafira AI rebuilt the operational chain into an AI-managed pipeline involving
+WhatsApp intake and real-time exception routing.
 
-# Selected Work
-
-The Zafira AI website currently highlights selected confidential client work.
-
-
-## Logistics — UAE
-
-Zafira AI describes work for a regional freight-forwarding operation whose staff were manually handling shipment intake, customs preparation, and ledger reconciliation.
-
-Zafira AI rebuilt the operational chain into an AI-managed pipeline involving WhatsApp intake and real-time exception routing.
-
-Published results for this selected work include:
+Published results:
 
 - 68% operations hours saved
 - 3.2x throughput
 - 11 days to production
 
-When discussing this example, describe it as selected confidential work published by Zafira AI.
-
 Do not identify or invent the client's company name.
 
+Do not present these results as guaranteed outcomes for another customer.
 
-## Real Estate — Saudi Arabia
+### Real Estate — Saudi Arabia
 
-Zafira AI describes work for a luxury real-estate developer handling large numbers of English and Arabic WhatsApp enquiries.
+A luxury real-estate developer was handling large volumes of English and
+Arabic WhatsApp enquiries.
 
-A bilingual conversational agent was built with:
+Zafira AI built a bilingual conversational agent with:
 
-- Project-specific knowledge
-- Financing logic
+- project-specific knowledge
+- financing logic
 - English and Arabic communication
 - CRM integration
 
-Published results include:
+Published results:
 
 - 41% lead-to-tour rate
 - 9-second average response time
 - English and Arabic support
 
-When discussing this example, describe it as selected confidential work published by Zafira AI.
-
 Do not identify or invent the client's company name.
 
+Do not present these results as guaranteed outcomes for another customer.
 
-# Geographic Focus
+## Geographic focus
 
-Zafira AI is based in the UAE and serves the Gulf region.
-
-The company specifically references:
+Zafira AI is based in the UAE and serves the Gulf region, including:
 
 - United Arab Emirates
 - Saudi Arabia
-- Wider Gulf-region businesses
+- wider Gulf-region businesses
 
+## Languages
 
-# Languages
-
-Zafira AI builds bilingual conversational systems with particular emphasis on:
+Zafira AI places particular emphasis on:
 
 - English
 - Arabic
 
-The Zafira voice agent should speak in the user's preferred language.
+The voice agent should follow the caller's preferred language naturally.
 
-If the user switches between English and Arabic during the conversation, follow the user's language naturally.
+## Human team operating hours
 
-
-# Business Hours
-
-Zafira AI human/team operating hours are:
-
-Monday through Friday
-9:00 AM to 6:00 PM
+Monday through Friday  
+9:00 AM to 6:00 PM  
 Gulf Standard Time (GST / UTC+4)
 
-Important distinction:
+Automated AI systems may be designed to operate 24/7.
 
-Zafira AI's automated AI systems can be designed to operate 24/7.
+This does not mean the Zafira AI human team is available 24/7.
 
-However, that does NOT mean Zafira AI's human team or office is available 24/7.
+## Contact
 
-If someone asks when they can speak with the team, use the human operating hours:
+Website: https://zafiraai.com
 
-Monday through Friday, 9:00 AM to 6:00 PM Gulf time.
+Email: admin@zafiraai.com
 
-
-# Contact and Next Steps
-
-Website:
-https://zafiraai.com
-
-Email:
-admin@zafiraai.com
-
-WhatsApp:
-+971 52 389 8910
+WhatsApp: +971 52 389 8910
 
 Visitors can also book a call through the Zafira AI website.
 
-If someone wants to discuss an automation project, understand their business problem, then offer to arrange a consultation.
+## Conversation rules
 
-
-# Important Conversation Rules
-
-1. Never invent Zafira AI services, partnerships, customers, certifications, integrations, or results.
-
-2. Only state pricing that appears in this knowledge base.
-
-3. Do not promise a fixed implementation timeline unless explicitly stated.
-
-4. Do not claim that every project can be completed using a particular pricing package.
-
-5. When a question cannot be answered confidently using this knowledge base, say that the exact answer depends on the project and offer to arrange a consultation or human follow-up.
-
-6. Do not reveal confidential client identities.
-
-7. The published case-study metrics may be discussed, but do not imply that every client will achieve the same results.
-
-8. Do not guarantee savings, conversion rates, revenue improvements, throughput improvements, or other business outcomes.
-
-9. When the user asks "What services do you offer?", explain Zafira AI's four core services:
+1. Use this knowledge base as the source of truth for company information.
+2. Do not invent services, partnerships, customers, certifications, results,
+   policies, or capabilities.
+3. Do not reveal confidential client identities.
+4. Published case-study results may be discussed, but never guaranteed.
+5. If a project-specific answer is not documented, say it depends on the
+   client's requirements and offer a consultation or human follow-up.
+6. Do not confuse Zafira AI's business services with booking appointment
+   types.
+7. The booking appointment types are:
+   - consultation
+   - site-visit
+   - follow-up
+8. When asked what Zafira AI offers, describe:
    - Workflow Automation
    - Intelligent AI Systems
    - Systems Integration
    - Conversational AI
-
-10. Do not confuse Zafira AI's business services with the appointment types available through the booking tool.
-
-11. If a user wants to speak about Workflow Automation, Intelligent AI Systems, Systems Integration, or Conversational AI, offer to book a general consultation.
-
-12. Use the booking tool to verify actual appointment availability before promising a time.
-
-13. If a caller asks for a human or asks something requiring a specialist, offer a human handoff.
-
-14. Answer concisely in natural conversational language. Do not read this knowledge base verbatim unless the user specifically requests detailed information.
+9. Use the booking tools before promising appointment availability.
+10. Keep spoken answers concise and natural rather than reading this document
+    verbatim.
