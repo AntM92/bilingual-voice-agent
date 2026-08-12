@@ -7,114 +7,241 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>Zafira Voice Agent — Operations</title>
+    <title>Zafira — Voice Operations</title>
 
     <style>
+        :root {
+            --bg: #f4f6f8;
+            --surface: #ffffff;
+            --surface-soft: #f8fafc;
+            --border: #e2e8f0;
+            --text: #172033;
+            --muted: #64748b;
+            --dark: #111827;
+            --radius: 14px;
+            --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        }
+
         * {
             box-sizing: border-box;
         }
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f6f8;
-            color: #1f2937;
+            font-family:
+                Inter,
+                ui-sans-serif,
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+            background: var(--bg);
+            color: var(--text);
         }
 
         header {
-            background: #111827;
+            background: var(--dark);
             color: white;
-            padding: 22px;
+            padding: 24px;
+        }
+
+        .header-inner {
+            max-width: 1280px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: center;
         }
 
         header h1 {
-            margin: 0 0 5px;
-            font-size: 22px;
+            margin: 0;
+            font-size: 23px;
         }
 
         header p {
-            margin: 0;
+            margin: 5px 0 0;
             color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .header-badge {
+            border: 1px solid #374151;
+            background: #1f2937;
+            padding: 8px 12px;
+            border-radius: 999px;
+            color: #dbeafe;
+            font-size: 12px;
         }
 
         main {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: auto;
             padding: 24px;
         }
 
-        .login {
-            display: flex;
+        .toolbar {
+            display: grid;
+            grid-template-columns:
+                minmax(220px, 1fr)
+                auto
+                auto
+                auto;
             gap: 10px;
-            margin-bottom: 22px;
+            margin-bottom: 12px;
         }
 
         input,
+        select,
         button {
-            padding: 10px 12px;
-            border-radius: 7px;
-            border: 1px solid #d1d5db;
-            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 11px 13px;
+            font: inherit;
         }
 
-        input {
-            flex: 1;
+        input,
+        select {
+            background: white;
+            color: var(--text);
         }
 
         button {
             cursor: pointer;
-            background: #111827;
+            border: none;
+            background: var(--dark);
             color: white;
+            font-weight: 600;
         }
 
-        .status {
+        button:hover {
+            opacity: 0.92;
+        }
+
+        button.secondary {
+            background: white;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0 12px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .auto-refresh input {
+            width: auto;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            min-height: 24px;
             margin-bottom: 20px;
-            min-height: 20px;
+            font-size: 13px;
+            color: var(--muted);
         }
 
         .cards {
             display: grid;
             grid-template-columns:
-                repeat(auto-fit, minmax(160px, 1fr));
+                repeat(6, minmax(150px, 1fr));
             gap: 14px;
-            margin-bottom: 24px;
+            margin-bottom: 22px;
         }
 
         .card {
-            background: white;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             padding: 18px;
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
+            box-shadow: var(--shadow);
         }
 
-        .card .label {
-            color: #6b7280;
-            font-size: 13px;
+        .card-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        .card .value {
-            font-size: 26px;
-            font-weight: bold;
+        .card-value {
+            font-size: 28px;
+            font-weight: 750;
             margin-top: 7px;
         }
 
-        section {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
+        .card-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
             margin-bottom: 22px;
             overflow: hidden;
+            box-shadow: var(--shadow);
         }
 
-        section h2 {
-            font-size: 17px;
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
             padding: 16px 18px;
-            margin: 0;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid var(--border);
         }
 
-        .section-body {
+        .panel-header h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .panel-header span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .panel-body {
             padding: 18px;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .service-card {
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .service-name {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .service-count {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 4px;
         }
 
         .table-wrap {
@@ -124,24 +251,71 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: 13px;
         }
 
         th,
         td {
-            padding: 11px;
+            padding: 12px 10px;
             text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-            white-space: nowrap;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
         }
 
         th {
-            color: #6b7280;
-            font-weight: 600;
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-booking {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-handoff {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-information {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .badge-unsuccessful {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-en {
+            background: #eef2ff;
+            color: #4338ca;
+        }
+
+        .badge-ar {
+            background: #f3e8ff;
+            color: #7e22ce;
         }
 
         .view-button {
-            padding: 6px 10px;
+            padding: 7px 11px;
             font-size: 12px;
         }
 
@@ -149,33 +323,96 @@
             display: none;
         }
 
-        #summary {
-            line-height: 1.5;
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .detail-box {
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .detail-box h3 {
+            margin: 0 0 10px;
+            font-size: 14px;
+        }
+
+        .detail-box p {
+            margin: 0;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .transcript-box {
+            grid-column: 1 / -1;
         }
 
         pre {
+            margin: 0;
             white-space: pre-wrap;
             word-wrap: break-word;
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 7px;
-            max-height: 500px;
-            overflow-y: auto;
-            font-family: Consolas, monospace;
+            font-family:
+                "SFMono-Regular",
+                Consolas,
+                "Liberation Mono",
+                monospace;
             font-size: 13px;
+            line-height: 1.65;
+            max-height: 520px;
+            overflow-y: auto;
         }
 
-        .muted {
-            color: #6b7280;
+        .empty {
+            color: var(--muted);
+            font-style: italic;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 1100px) {
+            .cards {
+                grid-template-columns:
+                    repeat(3, minmax(150px, 1fr));
+            }
+        }
+
+        @media (max-width: 760px) {
             main {
                 padding: 14px;
             }
 
-            .login {
+            .header-inner {
+                align-items: flex-start;
                 flex-direction: column;
+            }
+
+            .toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .auto-refresh {
+                min-height: 44px;
+            }
+
+            .cards {
+                grid-template-columns:
+                    repeat(2, minmax(130px, 1fr));
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .transcript-box {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 430px) {
+            .cards {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -184,64 +421,117 @@
 <body>
 
 <header>
-    <h1>Zafira Voice Agent</h1>
-    <p>Operations Dashboard</p>
+    <div class="header-inner">
+        <div>
+            <h1>Zafira Voice Operations</h1>
+            <p>Bilingual appointment and call analytics</p>
+        </div>
+
+        <div class="header-badge">
+            English · العربية
+        </div>
+    </div>
 </header>
 
 <main>
 
-    <div class="login">
+    <div class="toolbar">
         <input
             id="token"
             type="password"
             placeholder="Workspace token"
             autocomplete="off"
         >
+
+        <select id="days">
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+        </select>
+
         <button id="loadButton">
             Load Dashboard
         </button>
+
+        <label class="auto-refresh">
+            <input
+                id="autoRefresh"
+                type="checkbox"
+            >
+            Auto-refresh
+        </label>
     </div>
 
-    <div id="status" class="status muted">
-        Enter the workspace token to load analytics.
+    <div class="status-row">
+        <span id="status">
+            Enter the workspace token to load analytics.
+        </span>
+
+        <span id="lastUpdated"></span>
     </div>
+
 
     <div class="cards">
         <div class="card">
-            <div class="label">Total Calls</div>
-            <div class="value" id="totalCalls">—</div>
+            <div class="card-label">Total Calls</div>
+            <div class="card-value" id="totalCalls">—</div>
+            <div class="card-subtitle">Completed conversations</div>
         </div>
 
         <div class="card">
-            <div class="label">Bookings</div>
-            <div class="value" id="bookings">—</div>
+            <div class="card-label">Bookings</div>
+            <div class="card-value" id="bookings">—</div>
+            <div class="card-subtitle">Confirmed appointments</div>
         </div>
 
         <div class="card">
-            <div class="label">Handoffs</div>
-            <div class="value" id="handoffs">—</div>
+            <div class="card-label">Handoffs</div>
+            <div class="card-value" id="handoffs">—</div>
+            <div class="card-subtitle">Human follow-ups</div>
         </div>
 
         <div class="card">
-            <div class="label">Conversion</div>
-            <div class="value" id="conversion">—</div>
+            <div class="card-label">Conversion</div>
+            <div class="card-value" id="conversion">—</div>
+            <div class="card-subtitle">Calls resulting in bookings</div>
         </div>
 
         <div class="card">
-            <div class="label">Average Duration</div>
-            <div class="value" id="duration">—</div>
+            <div class="card-label">Avg Duration</div>
+            <div class="card-value" id="duration">—</div>
+            <div class="card-subtitle">Average conversation time</div>
         </div>
 
         <div class="card">
-            <div class="label">English / Arabic</div>
-            <div class="value" id="languages">—</div>
+            <div class="card-label">Languages</div>
+            <div class="card-value" id="languages">—</div>
+            <div class="card-subtitle">English / العربية</div>
         </div>
     </div>
 
-    <section>
-        <h2>Last 7 Days</h2>
 
-        <div class="section-body table-wrap">
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Bookings by Service</h2>
+            <span id="servicePeriod"></span>
+        </div>
+
+        <div class="panel-body">
+            <div
+                id="services"
+                class="service-grid"
+            ></div>
+        </div>
+    </section>
+
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Daily Performance</h2>
+            <span>Asia/Dubai</span>
+        </div>
+
+        <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
@@ -249,34 +539,26 @@
                         <th>Calls</th>
                         <th>Bookings</th>
                         <th>Handoffs</th>
-                        <th>EN</th>
-                        <th>AR</th>
+                        <th>English</th>
+                        <th>Arabic</th>
                         <th>Avg Duration</th>
                         <th>Conversion</th>
                     </tr>
                 </thead>
 
-                <tbody id="dailyRows">
-                </tbody>
+                <tbody id="dailyRows"></tbody>
             </table>
         </div>
     </section>
 
-    <section>
-        <h2>Bookings by Service</h2>
 
-        <div
-            id="services"
-            class="section-body muted"
-        >
-            —
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Recent Calls</h2>
+            <span>Latest 10 conversations</span>
         </div>
-    </section>
 
-    <section>
-        <h2>Recent Calls</h2>
-
-        <div class="section-body table-wrap">
+        <div class="table-wrap">
             <table>
                 <thead>
                     <tr>
@@ -290,27 +572,53 @@
                     </tr>
                 </thead>
 
-                <tbody id="recentRows">
-                </tbody>
+                <tbody id="recentRows"></tbody>
             </table>
         </div>
     </section>
 
-    <section id="callDetail">
-        <h2 id="detailTitle">
-            Call Detail
-        </h2>
 
-        <div class="section-body">
-            <h3>Summary</h3>
-            <p id="summary"></p>
+    <section
+        id="callDetail"
+        class="panel"
+    >
+        <div class="panel-header">
+            <h2 id="detailTitle">
+                Call Detail
+            </h2>
 
-            <h3>Transcript</h3>
-            <pre id="transcript"></pre>
+            <button
+                id="closeDetail"
+                class="secondary"
+            >
+                Close
+            </button>
+        </div>
+
+        <div class="panel-body">
+            <div class="detail-grid">
+
+                <div class="detail-box">
+                    <h3>Call Summary</h3>
+                    <p id="summary"></p>
+                </div>
+
+                <div class="detail-box">
+                    <h3>Call Information</h3>
+                    <p id="detailInfo"></p>
+                </div>
+
+                <div class="detail-box transcript-box">
+                    <h3>Clean Transcript</h3>
+                    <pre id="transcript"></pre>
+                </div>
+
+            </div>
         </div>
     </section>
 
 </main>
+
 
 <script>
     const tokenInput =
@@ -318,6 +626,18 @@
 
     const statusBox =
         document.getElementById("status");
+
+    const lastUpdated =
+        document.getElementById("lastUpdated");
+
+    const daysSelect =
+        document.getElementById("days");
+
+    const autoRefresh =
+        document.getElementById("autoRefresh");
+
+    let refreshTimer = null;
+
 
     async function api(path) {
         const token = tokenInput.value.trim();
@@ -340,6 +660,12 @@
             );
         }
 
+        if (response.status === 404) {
+            throw new Error(
+                "Requested record was not found."
+            );
+        }
+
         if (!response.ok) {
             throw new Error(
                 `Request failed: ${response.status}`
@@ -351,27 +677,32 @@
 
 
     function duration(seconds) {
-        if (seconds === null ||
-            seconds === undefined) {
+        if (
+            seconds === null ||
+            seconds === undefined
+        ) {
             return "—";
         }
 
-        if (seconds < 60) {
-            return `${seconds}s`;
+        const rounded = Math.round(seconds);
+
+        if (rounded < 60) {
+            return `${rounded}s`;
         }
 
         const minutes =
-            Math.floor(seconds / 60);
+            Math.floor(rounded / 60);
 
         const remaining =
-            Math.round(seconds % 60);
+            rounded % 60;
 
         return `${minutes}m ${remaining}s`;
     }
 
 
     function createCell(value) {
-        const td = document.createElement("td");
+        const td =
+            document.createElement("td");
 
         td.textContent =
             value === null ||
@@ -384,18 +715,78 @@
     }
 
 
+    function createBadge(text, className) {
+        const badge =
+            document.createElement("span");
+
+        badge.className =
+            `badge ${className}`;
+
+        badge.textContent = text;
+
+        return badge;
+    }
+
+
+    function outcomeBadge(outcome) {
+        const normalized =
+            outcome || "information";
+
+        const labels = {
+            booking: "Booking",
+            handoff: "Handoff",
+            information: "Information",
+            unsuccessful: "Unsuccessful"
+        };
+
+        return createBadge(
+            labels[normalized] || normalized,
+            `badge-${normalized}`
+        );
+    }
+
+
+    function languageBadge(language) {
+        if (language === "ar") {
+            return createBadge(
+                "العربية",
+                "badge-ar"
+            );
+        }
+
+        return createBadge(
+            "English",
+            "badge-en"
+        );
+    }
+
+
+    function serviceLabel(service) {
+        const labels = {
+            "consultation": "General Consultation",
+            "site-visit": "On-Site Visit",
+            "follow-up": "Follow-Up Call"
+        };
+
+        return labels[service] || service;
+    }
+
+
     function renderSummary(data) {
         document.getElementById(
             "totalCalls"
-        ).textContent = data.total_calls;
+        ).textContent =
+            data.total_calls;
 
         document.getElementById(
             "bookings"
-        ).textContent = data.outcomes.bookings;
+        ).textContent =
+            data.outcomes.bookings;
 
         document.getElementById(
             "handoffs"
-        ).textContent = data.outcomes.handoffs;
+        ).textContent =
+            data.outcomes.handoffs;
 
         document.getElementById(
             "conversion"
@@ -405,7 +796,9 @@
         document.getElementById(
             "duration"
         ).textContent =
-            duration(data.average_duration_secs);
+            duration(
+                data.average_duration_secs
+            );
 
         document.getElementById(
             "languages"
@@ -414,11 +807,95 @@
     }
 
 
+    function renderServices(data) {
+        const container =
+            document.getElementById(
+                "services"
+            );
+
+        container.replaceChildren();
+
+        document.getElementById(
+            "servicePeriod"
+        ).textContent =
+            `Last ${data.period_days} days`;
+
+        if (!data.booking_services.length) {
+            const empty =
+                document.createElement("div");
+
+            empty.className = "empty";
+            empty.textContent =
+                "No bookings in this period.";
+
+            container.appendChild(empty);
+            return;
+        }
+
+        for (
+            const service
+            of data.booking_services
+        ) {
+            const card =
+                document.createElement("div");
+
+            card.className =
+                "service-card";
+
+            const name =
+                document.createElement("div");
+
+            name.className =
+                "service-name";
+
+            name.textContent =
+                serviceLabel(
+                    service.service
+                );
+
+            const count =
+                document.createElement("div");
+
+            count.className =
+                "service-count";
+
+            count.textContent =
+                service.bookings;
+
+            card.append(
+                name,
+                count
+            );
+
+            container.appendChild(card);
+        }
+    }
+
+
     function renderDaily(data) {
         const tbody =
-            document.getElementById("dailyRows");
+            document.getElementById(
+                "dailyRows"
+            );
 
         tbody.replaceChildren();
+
+        if (!data.daily.length) {
+            const tr =
+                document.createElement("tr");
+
+            const td =
+                document.createElement("td");
+
+            td.colSpan = 8;
+            td.className = "empty";
+            td.textContent =
+                "No calls in this period.";
+
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
 
         for (const row of data.daily) {
             const tr =
@@ -443,48 +920,73 @@
 
             tbody.appendChild(tr);
         }
-
-        const services =
-            document.getElementById("services");
-
-        if (!data.booking_services.length) {
-            services.textContent =
-                "No bookings in this period.";
-            return;
-        }
-
-        services.textContent =
-            data.booking_services
-                .map(
-                    item =>
-                        `${item.service}: ${item.bookings}`
-                )
-                .join(" · ");
     }
 
 
     function renderRecent(data) {
         const tbody =
-            document.getElementById("recentRows");
+            document.getElementById(
+                "recentRows"
+            );
 
         tbody.replaceChildren();
+
+        if (!data.calls.length) {
+            const tr =
+                document.createElement("tr");
+
+            const td =
+                document.createElement("td");
+
+            td.colSpan = 7;
+            td.className = "empty";
+            td.textContent =
+                "No recent calls.";
+
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
 
         for (const call of data.calls) {
             const tr =
                 document.createElement("tr");
 
-            tr.append(
+            tr.appendChild(
                 createCell(
                     new Date(
                         call.received_at
                     ).toLocaleString()
-                ),
-                createCell(
+                )
+            );
+
+            const languageCell =
+                document.createElement("td");
+
+            languageCell.appendChild(
+                languageBadge(
                     call.language
-                        ? call.language.toUpperCase()
-                        : "—"
-                ),
-                createCell(call.outcome),
+                )
+            );
+
+            tr.appendChild(
+                languageCell
+            );
+
+            const outcomeCell =
+                document.createElement("td");
+
+            outcomeCell.appendChild(
+                outcomeBadge(
+                    call.outcome
+                )
+            );
+
+            tr.appendChild(
+                outcomeCell
+            );
+
+            tr.append(
                 createCell(
                     call.booking_reference ||
                     call.handoff_reference
@@ -494,7 +996,9 @@
                         call.call_duration_secs
                     )
                 ),
-                createCell(call.call_successful)
+                createCell(
+                    call.call_successful
+                )
             );
 
             const actionCell =
@@ -503,8 +1007,11 @@
             const button =
                 document.createElement("button");
 
-            button.className = "view-button";
-            button.textContent = "View";
+            button.className =
+                "view-button";
+
+            button.textContent =
+                "View";
 
             button.addEventListener(
                 "click",
@@ -513,15 +1020,22 @@
                 )
             );
 
-            actionCell.appendChild(button);
-            tr.appendChild(actionCell);
+            actionCell.appendChild(
+                button
+            );
+
+            tr.appendChild(
+                actionCell
+            );
 
             tbody.appendChild(tr);
         }
     }
 
 
-    async function loadCall(conversationId) {
+    async function loadCall(
+        conversationId
+    ) {
         try {
             statusBox.textContent =
                 "Loading conversation...";
@@ -537,13 +1051,42 @@
             document.getElementById(
                 "detailTitle"
             ).textContent =
-                `Call Detail — ${data.conversation_id}`;
+                "Call Detail";
 
             document.getElementById(
                 "summary"
             ).textContent =
                 data.transcript_summary ||
                 "No summary available.";
+
+            document.getElementById(
+                "detailInfo"
+            ).textContent =
+                [
+                    `Conversation: ${data.conversation_id}`,
+                    `Language: ${
+                        data.language === "ar"
+                            ? "Arabic"
+                            : "English"
+                    }`,
+                    `Outcome: ${data.outcome || "—"}`,
+                    `Reference: ${
+                        data.booking_reference ||
+                        data.handoff_reference ||
+                        "—"
+                    }`,
+                    `Duration: ${
+                        duration(
+                            data.call_duration_secs
+                        )
+                    }`,
+                    `Success: ${
+                        data.call_successful || "—"
+                    }`,
+                    `Termination: ${
+                        data.termination_reason || "—"
+                    }`
+                ].join("\n");
 
             document.getElementById(
                 "transcript"
@@ -556,10 +1099,12 @@
                     "callDetail"
                 );
 
-            detail.style.display = "block";
+            detail.style.display =
+                "block";
 
             detail.scrollIntoView({
-                behavior: "smooth"
+                behavior: "smooth",
+                block: "start"
             });
 
             statusBox.textContent =
@@ -574,29 +1119,78 @@
 
     async function loadDashboard() {
         try {
+            const days =
+                daysSelect.value;
+
             statusBox.textContent =
                 "Loading analytics...";
+
+            document.getElementById(
+                "loadButton"
+            ).disabled = true;
 
             const [
                 summary,
                 daily,
                 recent
             ] = await Promise.all([
-                api("/analytics/summary"),
-                api("/analytics/daily?days=7"),
-                api("/analytics/recent?limit=10")
+                api(
+                    "/analytics/summary"
+                ),
+                api(
+                    `/analytics/daily?days=${days}`
+                ),
+                api(
+                    "/analytics/recent?limit=10"
+                )
             ]);
 
             renderSummary(summary);
+            renderServices(daily);
             renderDaily(daily);
             renderRecent(recent);
+
+            const now =
+                new Date();
 
             statusBox.textContent =
                 "Dashboard loaded.";
 
+            lastUpdated.textContent =
+                `Updated ${now.toLocaleTimeString()}`;
+
         } catch (error) {
             statusBox.textContent =
                 error.message;
+
+        } finally {
+            document.getElementById(
+                "loadButton"
+            ).disabled = false;
+        }
+    }
+
+
+    function updateAutoRefresh() {
+        if (refreshTimer) {
+            clearInterval(
+                refreshTimer
+            );
+
+            refreshTimer = null;
+        }
+
+        if (autoRefresh.checked) {
+            refreshTimer = setInterval(
+                () => {
+                    if (
+                        tokenInput.value.trim()
+                    ) {
+                        loadDashboard();
+                    }
+                },
+                30000
+            );
         }
     }
 
@@ -608,10 +1202,43 @@
         loadDashboard
     );
 
+
+    daysSelect.addEventListener(
+        "change",
+        () => {
+            if (
+                tokenInput.value.trim()
+            ) {
+                loadDashboard();
+            }
+        }
+    );
+
+
+    autoRefresh.addEventListener(
+        "change",
+        updateAutoRefresh
+    );
+
+
+    document.getElementById(
+        "closeDetail"
+    ).addEventListener(
+        "click",
+        () => {
+            document.getElementById(
+                "callDetail"
+            ).style.display = "none";
+        }
+    );
+
+
     tokenInput.addEventListener(
         "keydown",
         event => {
-            if (event.key === "Enter") {
+            if (
+                event.key === "Enter"
+            ) {
                 loadDashboard();
             }
         }
