@@ -1,36 +1,68 @@
 """
-Tool server for the bilingual EN/AR customer-response voice agent.
+FastAPI backend for the Zafira AI bilingual EN/AR voice agent.
 
-ElevenLabs Agents calls these endpoints as *webhook tools* during a live
-conversation. The agent decides when to call them (based on the tool
-descriptions configured in the dashboard — see agent/tools.md); this server
-just does the work and returns JSON the agent can speak from.
+ElevenLabs Agents calls the tool endpoints as webhook tools during live
+conversations. The model determines when a tool should be called; this server
+enforces business rules, persists operational data, sends handoff
+notifications, and processes signed post-call webhooks.
 
-Endpoints
----------
-GET  /health                   Liveness check.
-POST /tools/check-availability Return open appointment slots for a service.
-POST /tools/book-appointment   Book a slot and persist the lead.
-POST /tools/request-handoff    Capture a human-callback request (handoff).
-POST /webhooks/post-call       Receive the ElevenLabs post-call payload.
+## Core endpoints
 
-Design notes
-------------
-- Storage is a JSON-lines file (data/leads.jsonl). Deliberately simple: the
-  point of the prototype is the conversation design and the integration
-  seam, not the database. Swapping this for Supabase/a CRM is a small,
-  isolated change (see save_record()).
-- Every tool endpoint requires the X-Workspace-Token header to match
-  WORKSPACE_TOKEN from .env. Configure the same value as a secret header in
-  the dashboard tool settings, so only your ElevenLabs workspace can call
-  these endpoints.
-- Human handoff here is *webhook-based* (capture a callback, notify a
-  human). On a phone deployment you would use the built-in
-  transfer_to_number system tool instead; see README "Design decisions".
+GET  /health
+    Liveness and authentication-configuration check.
 
-Run locally:
+POST /tools/check-availability
+    Return available demo appointment slots for an appointment type.
+
+POST /tools/book-appointment
+    Validate and persist a confirmed appointment.
+
+POST /tools/request-handoff
+    Persist a human-callback request and notify the configured recipient.
+
+POST /webhooks/post-call
+    Verify and process ElevenLabs post-call transcription webhooks.
+
+## Analytics
+
+GET /analytics/summary
+    Overall call and conversion metrics.
+
+GET /analytics/recent
+    Recent conversation metadata.
+
+GET /analytics/calls/{conversation_id}
+    Detailed information and clean transcript for one conversation.
+
+GET /analytics/daily
+    Daily call, booking, handoff, language, and service metrics.
+
+GET /dashboard
+    Protected operator analytics dashboard frontend.
+
+## Design notes
+
+- Operational data is persisted in SQLite at data/agent.db.
+- Appointment availability uses a deterministic demo schedule. The backend,
+  not the language model, is the source of truth for valid slots and duplicate
+  booking prevention.
+- Protected tool and analytics endpoints require X-Workspace-Token to match
+  WORKSPACE_TOKEN from the environment. If authentication is not configured,
+  protected requests fail closed.
+- Human handoffs are webhook-based callback requests. Successful handoffs are
+  stored in SQLite and trigger an email notification through the configured
+  notification provider.
+- ElevenLabs post-call webhooks are verified using the ElevenLabs-Signature
+  HMAC signature and stored idempotently by conversation_id.
+- The browser-widget demo uses callback-based escalation rather than a live
+  telephone transfer. A telephony deployment could instead use the appropriate
+  transfer system tool.
+
+Run locally with Uvicorn, for example:
+
     uvicorn server.main:app --reload --port 8000
-In production the server runs on an always-on HTTPS host (the demo uses PythonAnywhere); for local testing, expose the dev server with any HTTPS tunnel.
+
+The hosted demo backend runs on PythonAnywhere over HTTPS.
 """
 
 import json
@@ -60,8 +92,6 @@ log = logging.getLogger("voice-agent")
 WORKSPACE_TOKEN = os.getenv("WORKSPACE_TOKEN", "")
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 DB_FILE = DATA_DIR / "agent.db"
-LEADS_FILE = DATA_DIR / "leads.jsonl"
-POSTCALL_FILE = DATA_DIR / "post_call_log.jsonl"
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 POSTCALL_WEBHOOK_SECRET = os.getenv("POSTCALL_WEBHOOK_SECRET", "")
 DASHBOARD_FILE = Path(__file__).resolve().parent / "dashboard.html"
@@ -130,13 +160,6 @@ def require_workspace_auth(
     ),
 ) -> None:
     require_token(x_workspace_token)
-
-def save_record(path: Path, record: dict) -> None:
-    """Append one JSON record per line. Swap this function to push to a CRM."""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    record["saved_at"] = datetime.now(timezone.utc).isoformat()
-    with path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def new_ref(prefix: str) -> str:
