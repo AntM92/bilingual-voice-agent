@@ -11,8 +11,6 @@ native speaker; the LLM translation is a draft, not a decision).
 or answer questions about our services — and we can talk in English or
 Arabic, whichever you prefer. How can I help?"
 
-## Arabic (review and adjust to your preferred register)
-Write the Arabic version yourself in the dashboard after reviewing the
-auto-translation. Aim for the same warmth and brevity, in the register you
-would actually use with a Gulf customer (MSA with a light, natural tone is
-the safe default for a demo).
+
+## Arabic
+مرحباً بك في المساعد التجريبي من زافيرا. يمكنني مساعدتك في حجز موعد أو الإجابة عن استفساراتك حول خدماتنا، ويمكننا التحدث بالعربية أو الإنجليزية حسب تفضيلك. كيف يمكنني مساعدتك؟
