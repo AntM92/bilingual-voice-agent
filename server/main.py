@@ -83,6 +83,7 @@ from pydantic import BaseModel, Field
 from elevenlabs.client import ElevenLabs
 from elevenlabs.errors import BadRequestError
 from fastapi.responses import HTMLResponse
+from contextlib import asynccontextmanager
 
 load_dotenv()
 
@@ -95,8 +96,6 @@ DB_FILE = DATA_DIR / "agent.db"
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 POSTCALL_WEBHOOK_SECRET = os.getenv("POSTCALL_WEBHOOK_SECRET", "")
 DASHBOARD_FILE = Path(__file__).resolve().parent / "dashboard.html"
-
-app = FastAPI(title="Bilingual Voice Agent — Tool Server", version="0.1.0")
 
 # ---------------------------------------------------------------------------
 # Demo schedule. In a real deployment this would query a calendar/booking
@@ -287,6 +286,18 @@ def init_db() -> None:
             ON post_calls(language)
             """
         )
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(
+    title="Bilingual Voice Agent — Tool Server",
+    version="0.1.0",
+    lifespan=lifespan,
+)
 
 def send_handoff_email(
     ref: str,
@@ -506,11 +517,11 @@ class HandoffRequest(BaseModel):
 # ---------------------------------------------------------------------------
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "auth_enabled": bool(WORKSPACE_TOKEN)}
+    return {
+        "status": "ok",
+        "auth_enabled": bool(WORKSPACE_TOKEN),
+    }
 
-@app.on_event("startup")
-def startup() -> None:
-    init_db()
 
 @app.post("/tools/check-availability")
 def check_availability(
