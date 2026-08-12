@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Zafira Voice Agent — Operations</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 22px;
+        }
+
+        header h1 {
+            margin: 0 0 5px;
+            font-size: 22px;
+        }
+
+        header p {
+            margin: 0;
+            color: #cbd5e1;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: auto;
+            padding: 24px;
+        }
+
+        .login {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        input,
+        button {
+            padding: 10px 12px;
+            border-radius: 7px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+        }
+
+        input {
+            flex: 1;
+        }
+
+        button {
+            cursor: pointer;
+            background: #111827;
+            color: white;
+        }
+
+        .status {
+            margin-bottom: 20px;
+            min-height: 20px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .card .label {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .card .value {
+            font-size: 26px;
+            font-weight: bold;
+            margin-top: 7px;
+        }
+
+        section {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            margin-bottom: 22px;
+            overflow: hidden;
+        }
+
+        section h2 {
+            font-size: 17px;
+            padding: 16px 18px;
+            margin: 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .section-body {
+            padding: 18px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            padding: 11px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+
+        th {
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .view-button {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        #callDetail {
+            display: none;
+        }
+
+        #summary {
+            line-height: 1.5;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 7px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+        }
+
+        .muted {
+            color: #6b7280;
+        }
+
+        @media (max-width: 600px) {
+            main {
+                padding: 14px;
+            }
+
+            .login {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Zafira Voice Agent</h1>
+    <p>Operations Dashboard</p>
+</header>
+
+<main>
+
+    <div class="login">
+        <input
+            id="token"
+            type="password"
+            placeholder="Workspace token"
+            autocomplete="off"
+        >
+        <button id="loadButton">
+            Load Dashboard
+        </button>
+    </div>
+
+    <div id="status" class="status muted">
+        Enter the workspace token to load analytics.
+    </div>
+
+    <div class="cards">
+        <div class="card">
+            <div class="label">Total Calls</div>
+            <div class="value" id="totalCalls">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Bookings</div>
+            <div class="value" id="bookings">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Handoffs</div>
+            <div class="value" id="handoffs">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Conversion</div>
+            <div class="value" id="conversion">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Average Duration</div>
+            <div class="value" id="duration">—</div>
+        </div>
+
+        <div class="card">
+            <div class="label">English / Arabic</div>
+            <div class="value" id="languages">—</div>
+        </div>
+    </div>
+
+    <section>
+        <h2>Last 7 Days</h2>
+
+        <div class="section-body table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Calls</th>
+                        <th>Bookings</th>
+                        <th>Handoffs</th>
+                        <th>EN</th>
+                        <th>AR</th>
+                        <th>Avg Duration</th>
+                        <th>Conversion</th>
+                    </tr>
+                </thead>
+
+                <tbody id="dailyRows">
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <h2>Bookings by Service</h2>
+
+        <div
+            id="services"
+            class="section-body muted"
+        >
+            —
+        </div>
+    </section>
+
+    <section>
+        <h2>Recent Calls</h2>
+
+        <div class="section-body table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Language</th>
+                        <th>Outcome</th>
+                        <th>Reference</th>
+                        <th>Duration</th>
+                        <th>Success</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody id="recentRows">
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="callDetail">
+        <h2 id="detailTitle">
+            Call Detail
+        </h2>
+
+        <div class="section-body">
+            <h3>Summary</h3>
+            <p id="summary"></p>
+
+            <h3>Transcript</h3>
+            <pre id="transcript"></pre>
+        </div>
+    </section>
+
+</main>
+
+<script>
+    const tokenInput =
+        document.getElementById("token");
+
+    const statusBox =
+        document.getElementById("status");
+
+    async function api(path) {
+        const token = tokenInput.value.trim();
+
+        if (!token) {
+            throw new Error(
+                "Enter the workspace token first."
+            );
+        }
+
+        const response = await fetch(path, {
+            headers: {
+                "X-Workspace-Token": token
+            }
+        });
+
+        if (response.status === 401) {
+            throw new Error(
+                "Invalid workspace token."
+            );
+        }
+
+        if (!response.ok) {
+            throw new Error(
+                `Request failed: ${response.status}`
+            );
+        }
+
+        return response.json();
+    }
+
+
+    function duration(seconds) {
+        if (seconds === null ||
+            seconds === undefined) {
+            return "—";
+        }
+
+        if (seconds < 60) {
+            return `${seconds}s`;
+        }
+
+        const minutes =
+            Math.floor(seconds / 60);
+
+        const remaining =
+            Math.round(seconds % 60);
+
+        return `${minutes}m ${remaining}s`;
+    }
+
+
+    function createCell(value) {
+        const td = document.createElement("td");
+
+        td.textContent =
+            value === null ||
+            value === undefined ||
+            value === ""
+                ? "—"
+                : value;
+
+        return td;
+    }
+
+
+    function renderSummary(data) {
+        document.getElementById(
+            "totalCalls"
+        ).textContent = data.total_calls;
+
+        document.getElementById(
+            "bookings"
+        ).textContent = data.outcomes.bookings;
+
+        document.getElementById(
+            "handoffs"
+        ).textContent = data.outcomes.handoffs;
+
+        document.getElementById(
+            "conversion"
+        ).textContent =
+            `${data.booking_conversion_rate_percent}%`;
+
+        document.getElementById(
+            "duration"
+        ).textContent =
+            duration(data.average_duration_secs);
+
+        document.getElementById(
+            "languages"
+        ).textContent =
+            `${data.languages.english} / ${data.languages.arabic}`;
+    }
+
+
+    function renderDaily(data) {
+        const tbody =
+            document.getElementById("dailyRows");
+
+        tbody.replaceChildren();
+
+        for (const row of data.daily) {
+            const tr =
+                document.createElement("tr");
+
+            tr.append(
+                createCell(row.day),
+                createCell(row.total_calls),
+                createCell(row.bookings),
+                createCell(row.handoffs),
+                createCell(row.english_calls),
+                createCell(row.arabic_calls),
+                createCell(
+                    duration(
+                        row.average_duration_secs
+                    )
+                ),
+                createCell(
+                    `${row.booking_conversion_rate_percent}%`
+                )
+            );
+
+            tbody.appendChild(tr);
+        }
+
+        const services =
+            document.getElementById("services");
+
+        if (!data.booking_services.length) {
+            services.textContent =
+                "No bookings in this period.";
+            return;
+        }
+
+        services.textContent =
+            data.booking_services
+                .map(
+                    item =>
+                        `${item.service}: ${item.bookings}`
+                )
+                .join(" · ");
+    }
+
+
+    function renderRecent(data) {
+        const tbody =
+            document.getElementById("recentRows");
+
+        tbody.replaceChildren();
+
+        for (const call of data.calls) {
+            const tr =
+                document.createElement("tr");
+
+            tr.append(
+                createCell(
+                    new Date(
+                        call.received_at
+                    ).toLocaleString()
+                ),
+                createCell(
+                    call.language
+                        ? call.language.toUpperCase()
+                        : "—"
+                ),
+                createCell(call.outcome),
+                createCell(
+                    call.booking_reference ||
+                    call.handoff_reference
+                ),
+                createCell(
+                    duration(
+                        call.call_duration_secs
+                    )
+                ),
+                createCell(call.call_successful)
+            );
+
+            const actionCell =
+                document.createElement("td");
+
+            const button =
+                document.createElement("button");
+
+            button.className = "view-button";
+            button.textContent = "View";
+
+            button.addEventListener(
+                "click",
+                () => loadCall(
+                    call.conversation_id
+                )
+            );
+
+            actionCell.appendChild(button);
+            tr.appendChild(actionCell);
+
+            tbody.appendChild(tr);
+        }
+    }
+
+
+    async function loadCall(conversationId) {
+        try {
+            statusBox.textContent =
+                "Loading conversation...";
+
+            const data = await api(
+                `/analytics/calls/${
+                    encodeURIComponent(
+                        conversationId
+                    )
+                }`
+            );
+
+            document.getElementById(
+                "detailTitle"
+            ).textContent =
+                `Call Detail — ${data.conversation_id}`;
+
+            document.getElementById(
+                "summary"
+            ).textContent =
+                data.transcript_summary ||
+                "No summary available.";
+
+            document.getElementById(
+                "transcript"
+            ).textContent =
+                data.clean_transcript ||
+                "No transcript available.";
+
+            const detail =
+                document.getElementById(
+                    "callDetail"
+                );
+
+            detail.style.display = "block";
+
+            detail.scrollIntoView({
+                behavior: "smooth"
+            });
+
+            statusBox.textContent =
+                "Conversation loaded.";
+
+        } catch (error) {
+            statusBox.textContent =
+                error.message;
+        }
+    }
+
+
+    async function loadDashboard() {
+        try {
+            statusBox.textContent =
+                "Loading analytics...";
+
+            const [
+                summary,
+                daily,
+                recent
+            ] = await Promise.all([
+                api("/analytics/summary"),
+                api("/analytics/daily?days=7"),
+                api("/analytics/recent?limit=10")
+            ]);
+
+            renderSummary(summary);
+            renderDaily(daily);
+            renderRecent(recent);
+
+            statusBox.textContent =
+                "Dashboard loaded.";
+
+        } catch (error) {
+            statusBox.textContent =
+                error.message;
+        }
+    }
+
+
+    document.getElementById(
+        "loadButton"
+    ).addEventListener(
+        "click",
+        loadDashboard
+    );
+
+    tokenInput.addEventListener(
+        "keydown",
+        event => {
+            if (event.key === "Enter") {
+                loadDashboard();
+            }
+        }
+    );
+</script>
+
+</body>
+</html>

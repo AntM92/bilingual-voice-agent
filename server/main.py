@@ -51,6 +51,7 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 from elevenlabs.client import ElevenLabs
 from elevenlabs.errors import BadRequestError
+from fastapi.responses import HTMLResponse
 
 load_dotenv()
 
@@ -64,6 +65,7 @@ LEADS_FILE = DATA_DIR / "leads.jsonl"
 POSTCALL_FILE = DATA_DIR / "post_call_log.jsonl"
 ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY", "")
 POSTCALL_WEBHOOK_SECRET = os.getenv("POSTCALL_WEBHOOK_SECRET", "")
+DASHBOARD_FILE = Path(__file__).resolve().parent / "dashboard.html"
 
 app = FastAPI(title="Bilingual Voice Agent — Tool Server", version="0.1.0")
 
@@ -899,6 +901,18 @@ def analytics_daily(days: int = 7) -> dict:
             for row in service_rows
         ],
     }
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard() -> HTMLResponse:
+    if not DASHBOARD_FILE.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Dashboard file not found",
+        )
+
+    return HTMLResponse(
+        DASHBOARD_FILE.read_text(encoding="utf-8")
+    )
 
 @app.post("/webhooks/post-call")
 async def post_call(request: Request) -> dict:
