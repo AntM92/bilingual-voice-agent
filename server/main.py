@@ -827,6 +827,79 @@ def analytics_call_detail(conversation_id: str) -> dict:
 
     return dict(row)
 
+@app.get(
+    "/analytics/daily",
+    dependencies=[Depends(require_workspace_auth)],
+)
+def analytics_daily(days: int = 7) -> dict:
+    days = max(1, min(days, 90))
+
+    with get_db() as conn:
+        daily_rows = conn.execute(
+            """
+            SELECT
+                date(datetime(received_at, '+4 hours')) AS day,
+                COUNT(*) AS total_calls,
+                SUM(CASE WHEN outcome = 'booking' THEN 1 ELSE 0 END) AS bookings,
+                SUM(CASE WHEN outcome = 'handoff' THEN 1 ELSE 0 END) AS handoffs,
+                SUM(CASE WHEN outcome = 'information' THEN 1 ELSE 0 END) AS information,
+                SUM(CASE WHEN outcome = 'unsuccessful' THEN 1 ELSE 0 END) AS unsuccessful,
+                SUM(CASE WHEN language = 'en' THEN 1 ELSE 0 END) AS english_calls,
+                SUM(CASE WHEN language = 'ar' THEN 1 ELSE 0 END) AS arabic_calls,
+                ROUND(AVG(call_duration_secs), 1) AS average_duration_secs
+            FROM post_calls
+            WHERE date(datetime(received_at, '+4 hours'))
+                >= date('now', '+4 hours', ?)
+            GROUP BY day
+            ORDER BY day DESC
+            """,
+            (f"-{days - 1} days",),
+        ).fetchall()
+
+        service_rows = conn.execute(
+            """
+            SELECT
+                b.service,
+                COUNT(*) AS bookings
+            FROM post_calls pc
+            JOIN bookings b
+                ON b.ref = pc.booking_reference
+            WHERE pc.outcome = 'booking'
+              AND date(datetime(pc.received_at, '+4 hours'))
+                  >= date('now', '+4 hours', ?)
+            GROUP BY b.service
+            ORDER BY bookings DESC
+            """,
+            (f"-{days - 1} days",),
+        ).fetchall()
+
+    daily = []
+
+    for row in daily_rows:
+        total_calls = row["total_calls"] or 0
+        bookings = row["bookings"] or 0
+
+        daily.append(
+            {
+                **dict(row),
+                "booking_conversion_rate_percent": (
+                    round((bookings / total_calls) * 100, 1)
+                    if total_calls
+                    else 0.0
+                ),
+            }
+        )
+
+    return {
+        "period_days": days,
+        "timezone": "Asia/Dubai",
+        "daily": daily,
+        "booking_services": [
+            dict(row)
+            for row in service_rows
+        ],
+    }
+
 @app.post("/webhooks/post-call")
 async def post_call(request: Request) -> dict:
     if not POSTCALL_WEBHOOK_SECRET:
