@@ -41,6 +41,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+from threading import Lock
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Request
@@ -75,6 +76,7 @@ DEMO_SLOTS = {
     "follow-up": ["Sunday 12:00", "Tuesday 17:00", "Thursday 10:30"],
 }
 
+BOOKING_LOCK = Lock()
 
 # ---------------------------------------------------------------------------
 # Auth + persistence helpers
@@ -100,7 +102,33 @@ def save_record(path: Path, record: dict) -> None:
 def new_ref(prefix: str) -> str:
     return f"{prefix}-{uuid.uuid4().hex[:6].upper()}"
 
+def get_booked_slots(service: str) -> set[str]:
+    """Return already-booked slots for a service."""
+    if not LEADS_FILE.exists():
+        return set()
 
+    booked: set[str] = set()
+
+    with LEADS_FILE.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+
+            if not line:
+                continue
+
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            if (
+                record.get("type") == "booking"
+                and record.get("service") == service
+                and record.get("slot")
+            ):
+                booked.add(record["slot"])
+
+    return booked
 # ---------------------------------------------------------------------------
 # Request models — field descriptions double as documentation for what the
 # agent should have collected before calling the tool.
@@ -141,19 +169,37 @@ def check_availability(
     x_workspace_token: Optional[str] = Header(default=None),
 ) -> dict:
     require_token(x_workspace_token)
+
     service = body.service.strip().lower()
+
     if service not in DEMO_SLOTS:
         return {
             "found": False,
-            "message": f"Unknown service '{body.service}'. Valid services: {', '.join(DEMO_SLOTS)}.",
+            "service": service,
+            "slots": [],
         }
-    slots = DEMO_SLOTS[service]
+
+    booked_slots = get_booked_slots(service)
+
+    slots = [
+        slot
+        for slot in DEMO_SLOTS[service]
+        if slot not in booked_slots
+    ]
+
     if body.preferred_day:
-        day = body.preferred_day.strip().lower()
-        filtered = [s for s in slots if s.lower().startswith(day)]
-        slots = filtered or slots  # fall back to all slots so the agent can offer alternatives
-    log.info("availability: service=%s day=%s -> %d slots", service, body.preferred_day, len(slots))
-    return {"found": True, "service": service, "slots": slots}
+        preferred_day = body.preferred_day.strip().lower()
+        slots = [
+            slot
+            for slot in slots
+            if slot.lower().startswith(preferred_day)
+        ]
+
+    return {
+        "found": bool(slots),
+        "service": service,
+        "slots": slots,
+    }
 
 
 @app.post("/tools/book-appointment")
@@ -162,13 +208,72 @@ def book_appointment(
     x_workspace_token: Optional[str] = Header(default=None),
 ) -> dict:
     require_token(x_workspace_token)
-    ref = new_ref("BK")
-    save_record(LEADS_FILE, {"type": "booking", "ref": ref, **body.model_dump()})
-    log.info("booking saved: %s (%s, %s)", ref, body.service, body.slot)
+
+    service = body.service.strip().lower()
+    slot = body.slot.strip()
+
+    # Reject unknown services.
+    if service not in DEMO_SLOTS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "unknown_service",
+                "message": f"Unknown service '{body.service}'.",
+                "valid_services": list(DEMO_SLOTS.keys()),
+            },
+        )
+
+    # Reject slots that are not part of the configured schedule.
+    if slot not in DEMO_SLOTS[service]:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "invalid_slot",
+                "message": (
+                    f"'{slot}' is not an available slot for {service}. "
+                    "Call check_availability again before booking."
+                ),
+                "available_slots": DEMO_SLOTS[service],
+            },
+        )
+
+    # Prevent two bookings from claiming the same slot.
+    with BOOKING_LOCK:
+        booked_slots = get_booked_slots(service)
+
+        if slot in booked_slots:
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "error": "slot_already_booked",
+                    "message": (
+                        f"'{slot}' has already been booked. "
+                        "Call check_availability again and choose another slot."
+                    ),
+                },
+            )
+
+        ref = new_ref("BK")
+
+        record = body.model_dump()
+        record["service"] = service
+        record["slot"] = slot
+
+        save_record(
+            LEADS_FILE,
+            {
+                "type": "booking",
+                "ref": ref,
+                **record,
+            },
+        )
+
+    log.info("booking saved: %s (%s, %s)", ref, service, slot)
+
     return {
         "confirmed": True,
         "reference": ref,
-        "message": f"Booked {body.service} at {body.slot} for {body.name}. Reference {ref}.",
+        "message": f"Booked {service} at {slot} for {body.name}. Reference {ref}.",
     }
 
 
