@@ -39,6 +39,8 @@ import logging
 import os
 import uuid
 import sqlite3
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -160,6 +162,78 @@ def init_db() -> None:
             )
             """
         )
+
+def send_handoff_email(
+    ref: str,
+    name: Optional[str],
+    phone: str,
+    reason: str,
+    preferred_time: Optional[str],
+    language: str,
+) -> bool:
+    api_key = os.getenv("BREVO_API_KEY", "")
+    notify_email = os.getenv("HANDOFF_NOTIFY_EMAIL", "")
+    from_email = os.getenv("BREVO_FROM_EMAIL", "")
+    from_name = os.getenv("BREVO_FROM_NAME", "Zafira Voice Agent")
+
+    if not api_key or not notify_email or not from_email:
+        log.warning("Handoff email notification is not configured.")
+        return False
+
+    payload = {
+        "sender": {
+            "name": from_name,
+            "email": from_email,
+        },
+        "to": [
+            {
+                "email": notify_email,
+            }
+        ],
+        "subject": f"Human callback requested — {ref}",
+        "textContent": (
+            f"Reference: {ref}\n"
+            f"Name: {name or 'Not provided'}\n"
+            f"Phone: {phone}\n"
+            f"Reason: {reason}\n"
+            f"Preferred callback time: {preferred_time or 'Not specified'}\n"
+            f"Language: {'Arabic' if language == 'ar' else 'English'}\n"
+        ),
+    }
+
+    request = urllib.request.Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "accept": "application/json",
+            "api-key": api_key,
+            "content-type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            log.info(
+                "handoff notification sent for %s (HTTP %s)",
+                ref,
+                response.status,
+            )
+        return True
+
+    except urllib.error.HTTPError as exc:
+        error_body = exc.read().decode("utf-8", errors="replace")
+        log.error(
+            "Brevo notification failed for %s: HTTP %s %s",
+            ref,
+            exc.code,
+            error_body,
+        )
+        return False
+
+    except Exception:
+        log.exception("Brevo notification failed for %s", ref)
+        return False
 # ---------------------------------------------------------------------------
 # Request models — field descriptions double as documentation for what the
 # agent should have collected before calling the tool.
@@ -335,6 +409,7 @@ def request_handoff(
     ref = new_ref("HND")
     saved_at = datetime.now(timezone.utc).isoformat()
 
+    # Always save the handoff first.
     with get_db() as conn:
         conn.execute(
             """
@@ -360,8 +435,22 @@ def request_handoff(
             ),
         )
 
-    # TODO(production): notify a human immediately — WhatsApp Business API,
-    # Slack webhook, or email — instead of only persisting the request.
+    # Notify a human by email through Brevo.
+    notification_sent = send_handoff_email(
+        ref=ref,
+        name=body.name,
+        phone=body.phone,
+        reason=body.reason,
+        preferred_time=body.preferred_time,
+        language=body.language,
+    )
+
+    if not notification_sent:
+        log.warning(
+            "Handoff %s was saved but the email notification was not sent.",
+            ref,
+        )
+
     log.info("handoff requested: %s (%s)", ref, body.reason)
 
     return {
@@ -369,11 +458,15 @@ def request_handoff(
         "reference": ref,
         "message": (
             "A colleague will call back "
-            + (f"around {body.preferred_time} " if body.preferred_time else "shortly ")
-            + f"in {'Arabic' if body.language == 'ar' else 'English'}. Reference {ref}."
+            + (
+                f"around {body.preferred_time} "
+                if body.preferred_time
+                else "shortly "
+            )
+            + f"in {'Arabic' if body.language == 'ar' else 'English'}. "
+            + f"Reference {ref}."
         ),
     }
-
 
 @app.post("/webhooks/post-call")
 async def post_call(request: Request) -> dict:
