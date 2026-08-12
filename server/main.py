@@ -40,6 +40,7 @@ import os
 import uuid
 import sqlite3
 import requests
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -171,25 +172,70 @@ def init_db() -> None:
         )
 
         conn.execute(
-    """
-    CREATE TABLE IF NOT EXISTS post_calls (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        conversation_id TEXT NOT NULL UNIQUE,
-        agent_id TEXT,
-        agent_name TEXT,
-        event_timestamp INTEGER,
-        status TEXT,
-        call_duration_secs INTEGER,
-        termination_reason TEXT,
-        call_successful TEXT,
-        transcript_summary TEXT,
-        transcript_json TEXT NOT NULL,
-        analysis_json TEXT,
-        metadata_json TEXT,
-        received_at TEXT NOT NULL
+            """
+            CREATE TABLE IF NOT EXISTS post_calls (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversation_id TEXT NOT NULL UNIQUE,
+                agent_id TEXT,
+                agent_name TEXT,
+                event_timestamp INTEGER,
+                status TEXT,
+                call_duration_secs INTEGER,
+                termination_reason TEXT,
+                call_successful TEXT,
+                transcript_summary TEXT,
+                transcript_json TEXT NOT NULL,
+                analysis_json TEXT,
+                metadata_json TEXT,
+                received_at TEXT NOT NULL,
+                language TEXT,
+                outcome TEXT,
+                booking_reference TEXT,
+                handoff_reference TEXT,
+                clean_transcript TEXT
+            )
+            """
         )
-    """
-    )
+
+        # Upgrade existing databases that were created before the
+        # analytics columns existed.
+        post_call_columns = {
+            row["name"]
+            for row in conn.execute(
+                "PRAGMA table_info(post_calls)"
+            ).fetchall()
+        }
+
+        new_columns = {
+            "language": "TEXT",
+            "outcome": "TEXT",
+            "booking_reference": "TEXT",
+            "handoff_reference": "TEXT",
+            "clean_transcript": "TEXT",
+        }
+
+        for column_name, column_type in new_columns.items():
+            if column_name not in post_call_columns:
+                conn.execute(
+                    f"""
+                    ALTER TABLE post_calls
+                    ADD COLUMN {column_name} {column_type}
+                    """
+                )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_post_calls_outcome
+            ON post_calls(outcome)
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_post_calls_language
+            ON post_calls(language)
+            """
+        )
 
 def send_handoff_email(
     ref: str,
@@ -277,6 +323,107 @@ def send_handoff_email(
         )
 
         return False
+
+def build_clean_transcript(transcript: list[dict]) -> str:
+    """Return a readable transcript containing only spoken user/agent messages."""
+    lines: list[str] = []
+
+    for turn in transcript:
+        role = turn.get("role")
+        message = turn.get("message")
+
+        if role not in {"agent", "user"}:
+            continue
+
+        if not message:
+            continue
+
+        lines.append(f"{role}: {message}")
+
+    return "\n".join(lines)
+
+
+def detect_conversation_language(transcript: list[dict]) -> str:
+    """Detect English vs Arabic from user messages."""
+    user_text = " ".join(
+        str(turn.get("message") or "")
+        for turn in transcript
+        if turn.get("role") == "user"
+    )
+
+    arabic_chars = len(
+        re.findall(r"[\u0600-\u06FF]", user_text)
+    )
+    latin_chars = len(
+        re.findall(r"[A-Za-z]", user_text)
+    )
+
+    if arabic_chars > latin_chars:
+        return "ar"
+
+    return "en"
+
+
+def find_reference(text: str, prefix: str) -> Optional[str]:
+    """Extract references such as BK-ABC123 or HND-ABC123."""
+    match = re.search(
+        rf"\b{re.escape(prefix)}-[A-F0-9]{{6}}\b",
+        text.upper(),
+    )
+
+    return match.group(0) if match else None
+
+
+def derive_post_call_outcome(
+    transcript: list[dict],
+    summary: Optional[str],
+    call_successful: object,
+) -> tuple[str, Optional[str], Optional[str]]:
+    """Derive business outcome and associated references."""
+    transcript_json = json.dumps(
+        transcript,
+        ensure_ascii=False,
+    )
+
+    search_text = (
+        transcript_json
+        + "\n"
+        + (summary or "")
+    )
+
+    booking_reference = find_reference(
+        search_text,
+        "BK",
+    )
+
+    handoff_reference = find_reference(
+        search_text,
+        "HND",
+    )
+
+    normalized = search_text.lower()
+
+    if handoff_reference or "request_handoff" in normalized:
+        outcome = "handoff"
+
+    elif booking_reference or "book_appointment" in normalized:
+        outcome = "booking"
+
+    elif str(call_successful).lower() in {
+        "failure",
+        "failed",
+        "false",
+    }:
+        outcome = "unsuccessful"
+
+    else:
+        outcome = "information"
+
+    return (
+        outcome,
+        booking_reference,
+        handoff_reference,
+    )
 # ---------------------------------------------------------------------------
 # Request models — field descriptions double as documentation for what the
 # agent should have collected before calling the tool.
@@ -556,6 +703,26 @@ async def post_call(request: Request) -> dict:
     metadata = data.get("metadata") or {}
     analysis = data.get("analysis") or {}
     transcript = data.get("transcript") or []
+    transcript_summary = analysis.get("transcript_summary")
+    call_successful = analysis.get("call_successful")
+
+    clean_transcript = build_clean_transcript(
+        transcript
+    )
+
+    language = detect_conversation_language(
+        transcript
+    )
+
+    (
+        outcome,
+        booking_reference,
+        handoff_reference,
+    ) = derive_post_call_outcome(
+        transcript=transcript,
+        summary=transcript_summary,
+        call_successful=call_successful,
+    )
 
     conversation_id = data.get("conversation_id")
 
@@ -583,9 +750,17 @@ async def post_call(request: Request) -> dict:
                 transcript_json,
                 analysis_json,
                 metadata_json,
-                received_at
+                received_at,
+                language,
+                outcome,
+                booking_reference,
+                handoff_reference,
+                clean_transcript
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?
+            )
             ON CONFLICT(conversation_id) DO UPDATE SET
                 agent_id = excluded.agent_id,
                 agent_name = excluded.agent_name,
@@ -598,7 +773,12 @@ async def post_call(request: Request) -> dict:
                 transcript_json = excluded.transcript_json,
                 analysis_json = excluded.analysis_json,
                 metadata_json = excluded.metadata_json,
-                received_at = excluded.received_at
+                received_at = excluded.received_at,
+                language = excluded.language,
+                outcome = excluded.outcome,
+                booking_reference = excluded.booking_reference,
+                handoff_reference = excluded.handoff_reference,
+                clean_transcript = excluded.clean_transcript
             """,
             (
                 conversation_id,
@@ -608,12 +788,26 @@ async def post_call(request: Request) -> dict:
                 data.get("status"),
                 metadata.get("call_duration_secs"),
                 metadata.get("termination_reason"),
-                analysis.get("call_successful"),
-                analysis.get("transcript_summary"),
-                json.dumps(transcript, ensure_ascii=False),
-                json.dumps(analysis, ensure_ascii=False),
-                json.dumps(metadata, ensure_ascii=False),
+                call_successful,
+                transcript_summary,
+                json.dumps(
+                    transcript,
+                    ensure_ascii=False,
+                ),
+                json.dumps(
+                    analysis,
+                    ensure_ascii=False,
+                ),
+                json.dumps(
+                    metadata,
+                    ensure_ascii=False,
+                ),
                 received_at,
+                language,
+                outcome,
+                booking_reference,
+                handoff_reference,
+                clean_transcript,
             ),
         )
 
