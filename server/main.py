@@ -47,7 +47,7 @@ from typing import Optional
 from threading import Lock
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 from elevenlabs.client import ElevenLabs
 from elevenlabs.errors import BadRequestError
@@ -102,6 +102,13 @@ def require_token(x_workspace_token: Optional[str]) -> None:
     if x_workspace_token != WORKSPACE_TOKEN:
         raise HTTPException(status_code=401, detail="Invalid or missing X-Workspace-Token")
 
+def require_workspace_auth(
+    x_workspace_token: Optional[str] = Header(
+        default=None,
+        alias="X-Workspace-Token",
+    ),
+) -> None:
+    require_token(x_workspace_token)
 
 def save_record(path: Path, record: dict) -> None:
     """Append one JSON record per line. Swap this function to push to a CRM."""
@@ -658,7 +665,10 @@ def request_handoff(
         ),
     }
 
-@app.get("/analytics/summary")
+@app.get(
+    "/analytics/summary",
+    dependencies=[Depends(require_workspace_auth)],
+)
 def analytics_summary() -> dict:
     with get_db() as conn:
         total_calls = conn.execute(
