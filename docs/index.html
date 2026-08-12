@@ -3,40 +3,94 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>Bilingual Voice Agent — Live Demo</title>
+
   <style>
-    :root { color-scheme: light; }
-    body {
-      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #0b1020; color: #eef1f8;
+    :root {
+      color-scheme: light;
     }
-    main { max-width: 620px; padding: 48px 28px; text-align: center; }
-    h1 { font-size: 1.6rem; margin-bottom: .4rem; }
-    p  { color: #aab3cc; line-height: 1.55; }
-    .langs { margin-top: 10px; font-size: .95rem; color: #7ee0b8; }
-    .hint { margin-top: 26px; font-size: .85rem; color: #67708c; }
-    code { background: #1a2340; padding: 2px 6px; border-radius: 4px; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #0b1020;
+      color: #eef1f8;
+    }
+
+    main {
+      max-width: 620px;
+      padding: 48px 28px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: .4rem;
+    }
+
+    p {
+      color: #aab3cc;
+      line-height: 1.55;
+    }
+
+    .langs {
+      margin-top: 10px;
+      font-size: .95rem;
+      color: #7ee0b8;
+    }
+
+    .hint {
+      margin-top: 26px;
+      font-size: .85rem;
+      color: #67708c;
+    }
+
+    code {
+      background: #1a2340;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
   </style>
 </head>
+
 <body>
   <main>
     <h1>Bilingual EN/AR Customer-Response Voice Agent</h1>
-    <p>A working prototype built on ElevenLabs Agents: appointment booking,
-       live availability via webhook tools, and human handoff — in English
-       and Arabic, switching automatically mid-conversation.</p>
-    <p class="langs">Try it: start in English, then switch to Arabic mid-sentence.</p>
 
-    <!-- ====================================================================
-         PASTE YOUR WIDGET EMBED SNIPPET HERE.
-         Dashboard -> your agent -> Widget tab -> copy the embed code.
-         (The dashboard generates the exact, current snippet with your
-         agent id — always use that rather than a copy from a tutorial.)
-         The agent must be set to Public for the widget to work for
-         visitors who aren't you.
-         ==================================================================== -->
+    <p>
+      A working prototype built on ElevenLabs Agents: appointment booking,
+      live availability via webhook tools, and human handoff — in English
+      and Arabic, switching automatically mid-conversation.
+    </p>
 
-    <p class="hint">Built by Anthony Mallah · <a style="color:#7ea8e0" href="https://github.com/AntM92/bilingual-voice-agent">source on GitHub</a></p>
+    <p class="langs">
+      Try it: start in English, then switch to Arabic mid-sentence.
+    </p>
+
+    <elevenlabs-convai
+      agent-id="agent_4901kztbj7pkef8s6jatm3vm99kp">
+    </elevenlabs-convai>
+
+    <script
+      src="https://unpkg.com/@elevenlabs/convai-widget-embed"
+      async
+      type="text/javascript">
+    </script>
+
+    <p class="hint">
+      Built by Anthony Mallah ·
+      <a
+        style="color:#7ea8e0"
+        href="https://github.com/AntM92/bilingual-voice-agent"
+      >
+        source on GitHub
+      </a>
+    </p>
   </main>
 </body>
 </html>
