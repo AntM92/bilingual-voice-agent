@@ -792,6 +792,41 @@ def analytics_recent(limit: int = 10) -> dict:
         "calls": [dict(row) for row in rows],
     }
 
+@app.get(
+    "/analytics/calls/{conversation_id}",
+    dependencies=[Depends(require_workspace_auth)],
+)
+def analytics_call_detail(conversation_id: str) -> dict:
+    with get_db() as conn:
+        row = conn.execute(
+            """
+            SELECT
+                conversation_id,
+                agent_name,
+                language,
+                outcome,
+                booking_reference,
+                handoff_reference,
+                call_duration_secs,
+                call_successful,
+                termination_reason,
+                transcript_summary,
+                clean_transcript,
+                received_at
+            FROM post_calls
+            WHERE conversation_id = ?
+            """,
+            (conversation_id,),
+        ).fetchone()
+
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found",
+        )
+
+    return dict(row)
+
 @app.post("/webhooks/post-call")
 async def post_call(request: Request) -> dict:
     if not POSTCALL_WEBHOOK_SECRET:
