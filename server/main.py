@@ -80,9 +80,21 @@ SERVICES = {
 }
 
 DEMO_SLOTS = {
-    "consultation": ["Sunday 10:00", "Sunday 16:30", "Tuesday 11:00", "Wednesday 14:00"],
-    "site-visit": ["Monday 09:30", "Thursday 13:00"],
-    "follow-up": ["Sunday 12:00", "Tuesday 17:00", "Thursday 10:30"],
+    "consultation": [
+        "Monday 10:00",
+        "Tuesday 11:00",
+        "Wednesday 14:00",
+        "Friday 16:30",
+    ],
+    "site-visit": [
+        "Monday 09:30",
+        "Thursday 13:00",
+    ],
+    "follow-up": [
+        "Monday 12:00",
+        "Tuesday 17:00",
+        "Thursday 10:30",
+    ],
 }
 
 elevenlabs = ElevenLabs(
