@@ -107,14 +107,22 @@ BOOKING_LOCK = Lock()
 # Auth + persistence helpers
 # ---------------------------------------------------------------------------
 def require_token(x_workspace_token: Optional[str]) -> None:
-    """Reject tool calls that don't carry the shared secret header."""
+    """Reject protected requests unless workspace authentication is configured."""
     if not WORKSPACE_TOKEN:
-        # Fail loudly in logs but allow local testing without a token.
-        log.warning("WORKSPACE_TOKEN is not set — running with auth DISABLED (dev only).")
-        return
-    if x_workspace_token != WORKSPACE_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid or missing X-Workspace-Token")
+        log.error(
+            "WORKSPACE_TOKEN is not configured — rejecting protected request."
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="Server authentication is not configured",
+        )
 
+    if x_workspace_token != WORKSPACE_TOKEN:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing X-Workspace-Token",
+        )
+    
 def require_workspace_auth(
     x_workspace_token: Optional[str] = Header(
         default=None,
