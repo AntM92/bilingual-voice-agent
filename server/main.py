@@ -39,8 +39,7 @@ import logging
 import os
 import uuid
 import sqlite3
-import urllib.error
-import urllib.request
+import requests
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -201,38 +200,41 @@ def send_handoff_email(
         ),
     }
 
-    request = urllib.request.Request(
-        "https://api.brevo.com/v3/smtp/email",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "accept": "application/json",
-            "api-key": api_key,
-            "content-type": "application/json",
-        },
-        method="POST",
-    )
-
     try:
-        with urllib.request.urlopen(request, timeout=10) as response:
-            log.info(
-                "handoff notification sent for %s (HTTP %s)",
-                ref,
-                response.status,
-            )
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={
+                "accept": "application/json",
+                "api-key": api_key,
+                "content-type": "application/json",
+            },
+            json=payload,
+            timeout=10,
+        )
+
+        response.raise_for_status()
+
+        log.info(
+            "handoff notification sent for %s (HTTP %s)",
+            ref,
+            response.status_code,
+        )
+
         return True
 
-    except urllib.error.HTTPError as exc:
-        error_body = exc.read().decode("utf-8", errors="replace")
-        log.error(
-            "Brevo notification failed for %s: HTTP %s %s",
-            ref,
-            exc.code,
-            error_body,
-        )
-        return False
+    except requests.RequestException as exc:
+        response_text = ""
 
-    except Exception:
-        log.exception("Brevo notification failed for %s", ref)
+        if exc.response is not None:
+            response_text = exc.response.text
+
+        log.error(
+            "Brevo notification failed for %s: %s %s",
+            ref,
+            exc,
+            response_text,
+        )
+
         return False
 # ---------------------------------------------------------------------------
 # Request models — field descriptions double as documentation for what the
