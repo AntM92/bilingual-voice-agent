@@ -658,6 +658,95 @@ def request_handoff(
         ),
     }
 
+@app.get("/analytics/summary")
+def analytics_summary() -> dict:
+    with get_db() as conn:
+        total_calls = conn.execute(
+            "SELECT COUNT(*) FROM post_calls"
+        ).fetchone()[0]
+
+        bookings = conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM post_calls
+            WHERE outcome = 'booking'
+            """
+        ).fetchone()[0]
+
+        handoffs = conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM post_calls
+            WHERE outcome = 'handoff'
+            """
+        ).fetchone()[0]
+
+        information = conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM post_calls
+            WHERE outcome = 'information'
+            """
+        ).fetchone()[0]
+
+        unsuccessful = conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM post_calls
+            WHERE outcome = 'unsuccessful'
+            """
+        ).fetchone()[0]
+
+        english_calls = conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM post_calls
+            WHERE language = 'en'
+            """
+        ).fetchone()[0]
+
+        arabic_calls = conn.execute(
+            """
+            SELECT COUNT(*)
+            FROM post_calls
+            WHERE language = 'ar'
+            """
+        ).fetchone()[0]
+
+        average_duration = conn.execute(
+            """
+            SELECT AVG(call_duration_secs)
+            FROM post_calls
+            WHERE call_duration_secs IS NOT NULL
+            """
+        ).fetchone()[0]
+
+    conversion_rate = (
+        round((bookings / total_calls) * 100, 1)
+        if total_calls
+        else 0.0
+    )
+
+    return {
+        "total_calls": total_calls,
+        "outcomes": {
+            "bookings": bookings,
+            "handoffs": handoffs,
+            "information": information,
+            "unsuccessful": unsuccessful,
+        },
+        "languages": {
+            "english": english_calls,
+            "arabic": arabic_calls,
+        },
+        "average_duration_secs": (
+            round(average_duration, 1)
+            if average_duration is not None
+            else 0
+        ),
+        "booking_conversion_rate_percent": conversion_rate,
+    }
+
 @app.post("/webhooks/post-call")
 async def post_call(request: Request) -> dict:
     if not POSTCALL_WEBHOOK_SECRET:
